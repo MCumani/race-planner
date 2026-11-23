@@ -82,7 +82,10 @@ body>header{position:sticky;top:0;z-index:34}
 .datasrc label{cursor:pointer;text-decoration:underline}
 .wrap{display:block;min-height:calc(100vh - 62px)}
 body:not(.fopen) aside{visibility:hidden}
-#scrim{display:none}
+/* when the sidebar is open the page behind fades to a slight shade, darkest beside the sidebar */
+#scrim{position:fixed;inset:0;z-index:33;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s;
+  background:linear-gradient(to right,rgba(20,30,45,.16) 0%,rgba(20,30,45,.08) 45%,rgba(20,30,45,.02) 100%)}
+body.fopen #scrim{opacity:1;visibility:visible}
 /* pull-tab attached to the sidebar edge */
 .ftab-wrap{position:fixed;top:97px;left:0;height:0;z-index:36}
 .ftab{position:absolute;left:0;top:0;width:27px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;
@@ -202,8 +205,8 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
   aside{position:fixed;top:0;left:0;bottom:0;height:100vh;height:100dvh;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:calc(100% - 48px);max-width:420px;max-height:none;z-index:40;box-shadow:6px 0 22px rgba(20,40,70,.22);transform:translateX(-100%);transition:transform .2s,visibility .2s}
   body.fopen aside{transform:none}
   body.fopen{overflow:hidden}
-  #scrim{position:fixed;inset:0;background:rgba(20,30,45,.28);z-index:39;display:none}
-  body.fopen #scrim{display:block}
+  #scrim{z-index:39;background:linear-gradient(to right,rgba(20,30,45,.30) 0%,rgba(20,30,45,.18) 60%,rgba(20,30,45,.10) 100%)}
+  body.fopen #scrim{pointer-events:auto}
   .ftab-wrap{z-index:41}
 }
 /* results columns adapt to the space the results area actually has */
