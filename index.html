@@ -236,6 +236,8 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
 </header>
 
 <div id="scrim"></div>
+<!-- the pull-tab sits outside <main>: Safari pins position:fixed items to a "container" parent, so inside <main> it scrolled away -->
+<div class="ftab-wrap"><button class="ftab" id="toggleFilters" title="Show or hide filters" aria-label="Show or hide filters"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><line x1="7.5" y1="7" x2="7.5" y2="13" stroke-linecap="round"/></svg><span class="arr" aria-hidden="true">›</span></button></div>
 <div class="wrap">
 <aside id="side">
   <div class="aclose">Filters <span><button class="linkish" id="resetF">Reset</button></span></div>
@@ -309,7 +311,6 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
 </aside>
 
 <main>
-  <div class="ftab-wrap"><button class="ftab" id="toggleFilters" title="Show or hide filters" aria-label="Show or hide filters"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><line x1="7.5" y1="7" x2="7.5" y2="13" stroke-linecap="round"/></svg><span class="arr" aria-hidden="true">›</span></button></div>
   <div class="horsebar">
     <select id="horsePick" aria-label="Choose a horse"><option value="" disabled hidden>Horse</option></select>
     <input type="text" id="rBox" class="rbox" placeholder="R" inputmode="numeric" maxlength="3" title="Rating (M = maiden)" aria-label="Rating">
