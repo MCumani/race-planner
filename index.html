@@ -88,6 +88,15 @@ body:not(.fopen) aside{visibility:hidden}
 .ftab{position:absolute;left:0;top:0;width:27px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;
   border:1px solid #cfd5dc;border-left:0;border-radius:0 9px 9px 0;background:#fff;color:var(--ink);cursor:pointer;box-shadow:2px 1px 5px rgba(20,40,70,.08)}
 .ftab:hover{background:#eef1f5}
+/* shaped tab: flared top, shoulder and a tapering tail running down the sidebar edge */
+.ftab{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible;width:30px}
+.ftab>svg.icon,.ftab>.arr{position:relative;z-index:1}
+.ftab .tabshape{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;filter:drop-shadow(2px 1px 2.5px rgba(20,40,70,.10))}
+.ftab .tabshape .fill{fill:#fff;transition:fill .15s}
+.ftab:hover .tabshape .fill{fill:#eef1f5}
+body.fopen .ftab .tabshape .fill{fill:#fafafa}
+.ftab .tabshape .edge{fill:none;stroke:#cfd5dc;stroke-width:1}
+body.fopen .ftab .tabshape .edge{stroke:var(--line)}
 .ftab .arr{font-size:16px;line-height:10px;color:var(--muted);transition:transform .18s}
 body.fopen .ftab{background:#fafafa;border-color:var(--line);box-shadow:5px 3px 10px -4px rgba(20,40,70,.16)}
 body.fopen .ftab .arr{transform:rotate(180deg)}
@@ -237,7 +246,7 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
 
 <div id="scrim"></div>
 <!-- the pull-tab sits outside <main>: Safari pins position:fixed items to a "container" parent, so inside <main> it scrolled away -->
-<div class="ftab-wrap"><button class="ftab" id="toggleFilters" title="Show or hide filters" aria-label="Show or hide filters"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><line x1="7.5" y1="7" x2="7.5" y2="13" stroke-linecap="round"/></svg><span class="arr" aria-hidden="true">›</span></button></div>
+<div class="ftab-wrap"><button class="ftab" id="toggleFilters" title="Show or hide filters" aria-label="Show or hide filters"><svg class="tabshape" aria-hidden="true"><path class="fill"/><path class="edge"/></svg><svg class="icon" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><line x1="7.5" y1="7" x2="7.5" y2="13" stroke-linecap="round"/></svg><span class="arr" aria-hidden="true">›</span></button></div>
 <div class="wrap">
 <aside id="side">
   <div class="aclose">Filters <span><button class="linkish" id="resetF">Reset</button></span></div>
@@ -707,8 +716,15 @@ function placeTab(){
   const w=$(".ftab-wrap"), hb=$(".horsebar");
   w.style.top=(hb.getBoundingClientRect().top+scrollY)+"px";
   const ft=$("#toggleFilters"), hp=$("#horsePick").getBoundingClientRect(), db=$(".distbox").getBoundingClientRect();
-  ft.style.height=(db.top>hp.bottom)?Math.round(db.bottom-hp.top)+"px":"";
+  ft.style.height=(db.top>hp.bottom)?Math.round(db.bottom-hp.top)+"px":""; drawTab();
   w.style.left=Math.max(0,$("#side").getBoundingClientRect().right-1)+"px";
+}
+function drawTab(){
+  const b=$("#toggleFilters"), h=b.offsetHeight, W=29, r=9, tail=58;
+  const svg=b.querySelector(".tabshape"); svg.setAttribute("width",W+4); svg.setAttribute("height",h+tail+2);
+  const edge=`M0,1.5 C3,1.5 4,0.5 8,0.5 L${W-r},0.5 Q${W-0.5},0.5 ${W-0.5},${r} L${W-0.5},${h-10} Q${W-0.5},${h} ${W-9},${h} Q${W-15},${h} ${W-17},${h+8} L0.5,${h+tail}`;
+  svg.querySelector(".edge").setAttribute("d",edge);
+  svg.querySelector(".fill").setAttribute("d",edge+` L-1,${h+tail} L-1,1.5 Z`);
 }
 function followTab(ms){ const end=performance.now()+ms; (function f(){ placeTab(); if(performance.now()<end) requestAnimationFrame(f); })(); }
 addEventListener("resize",placeTab);
