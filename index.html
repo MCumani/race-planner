@@ -679,7 +679,7 @@ function resetAll(){
 $("#resetF").onclick=()=>{ resetAll(); render(true); };
 $("#selAll").onclick=()=>{ lastShown.forEach(r=>selected.add(r.id)); saveSel(); render(false); };
 $("#clearSel").onclick=()=>{ selected.clear(); saveSel(); viewSelOnly=false; render(false); };
-$("#viewSel").onclick=()=>{ viewSelOnly=!viewSelOnly; render(true); };
+$("#viewSel").onclick=()=>{ viewSelOnly=!viewSelOnly; if(viewSelOnly) track("view-selected","Viewed selected races"); render(true); };
 $("#selBack").onclick=()=>{ viewSelOnly=false; render(true); };
 /* rating box beside the horse picker, kept in step with the sidebar rating */
 function syncRBox(){
@@ -762,8 +762,8 @@ function openModal(title,text,hint){ $("#mTitle").textContent=title; $("#mText")
 $("#mClose").onclick=()=>$("#modal").classList.remove("on");
 $("#modal").onclick=e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); };
 $("#mCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText($("#mText").value); toast("Copied"); }catch(e){ $("#mText").select(); toast("Press Cmd/Ctrl+C to copy"); } };
-$("#copySel").onclick=()=>openModal("Selected races — ready to paste into an email or message",asText(selRaces()));
-$("#exportSel").onclick=async()=>{
+$("#copySel").onclick=()=>(track("copy-selected","Copied selected races"),openModal("Selected races — ready to paste into an email or message",asText(selRaces())));
+$("#exportSel").onclick=async()=>{ track("export-selected","Exported selected races");
   const rs=selRaces(), csv=asCSV(rs);
   const nm=(hName()?hName().replace(/[^\w ]/g,"").trim()+" - ":"")+"race options.csv";
   try{
@@ -844,8 +844,10 @@ function fillPick(){
 }
 function pickTone(){ const el=$("#horsePick"); el.classList.toggle("ph",!el.value); }
 // a new horse starts with a clean slate: no ticked or opened races from the last one
+/* usage events: horse looked up, races copied / exported / viewed */
+function track(path,title){ try{ if(window.goatcounter&&goatcounter.count) goatcounter.count({path:path,title:title||path,event:true}); }catch(e){} }
 function freshHorse(){ selected.clear(); saveSel(); openIds.clear(); viewSelOnly=false; }
-$("#horsePick").onchange=e=>{ pickTone(); freshHorse(); applyHorse(e.target.value); render(true); };
+$("#horsePick").onchange=e=>{ pickTone(); freshHorse(); applyHorse(e.target.value); render(true); if(horses[currentHorseId]) track("horse/"+horses[currentHorseId].name,"Horse: "+horses[currentHorseId].name); };
 $("#hName").addEventListener("input",()=>{ // typing a different name = a one-off horse, so drop the list selection
   if(currentHorseId&&horses[currentHorseId]&&hName()!==horses[currentHorseId].name){ currentHorseId=""; $("#horsePick").value=""; pickTone(); freshHorse(); }
 });
@@ -855,5 +857,7 @@ srcInfo(); fillPick(); resetAll(); render(true); placeTab(); // first open = sam
 
 })();
 </script>
+<!-- usage counting (GoatCounter: no cookies) -->
+<script data-goatcounter="https://cumani-racing.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
