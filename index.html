@@ -714,6 +714,14 @@ addEventListener("resize",placeTab);
 function setF(open){ document.body.classList.toggle("fopen",open); LS.set("rp_fopen",open); fitAside(); followTab(300); }
 $("#toggleFilters").onclick=()=>setF(!document.body.classList.contains("fopen"));
 $("#scrim").onclick=()=>setF(false);
+/* tapping or clicking anywhere outside the sidebar closes it; that tap only closes the sidebar and does nothing else */
+let swallowClick=false;
+document.addEventListener("pointerdown",e=>{
+  if(!document.body.classList.contains("fopen")||e.target.closest("#side,.ftab,#modal")) return;
+  swallowClick=true; e.preventDefault(); setF(false);
+},true);
+document.addEventListener("mousedown",e=>{ if(swallowClick) e.preventDefault(); },true);
+document.addEventListener("click",e=>{ if(swallowClick){ swallowClick=false; e.preventDefault(); e.stopPropagation(); } },true);
 if(LS.get("rp_fopen",false)) document.body.classList.add("fopen");
 
 /* ---------- export / copy ---------- */
