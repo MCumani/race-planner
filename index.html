@@ -96,7 +96,9 @@ body.fopen #scrim{opacity:1;visibility:visible}
 .ftab>svg.icon,.ftab>.arr{position:relative;z-index:1}
 .ftab .tabshape{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;filter:drop-shadow(2px 1px 2.5px rgba(20,40,70,.10))}
 .ftab .tabshape .fill{fill:#fff;transition:fill .15s}
-.ftab:hover .tabshape .fill{fill:#eef1f5}
+/* hover shade only on a mouse; on a touch screen it would stick and leave the tab grey after closing */
+@media (hover:hover){.ftab:hover .tabshape .fill{fill:#f3f5f8}}
+body:not(.fopen) .ftab .tabshape .fill{fill:#fff}
 body.fopen .ftab .tabshape .fill{fill:#fafafa}
 .ftab .tabshape .edge{fill:none;stroke:#cfd5dc;stroke-width:1}
 body.fopen .ftab .tabshape .edge{stroke:var(--line)}
