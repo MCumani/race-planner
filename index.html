@@ -30,6 +30,8 @@ header h1{margin:0;font-size:17px;font-weight:600;letter-spacing:2.5px;text-tran
   header h1{font-size:14px;letter-spacing:2px}
   .datasrc{font-size:11px}
 }
+/* page header (logo, title, blue line) stays at the top while scrolling */
+body>header{position:sticky;top:0;z-index:34}
 .horsebar{display:flex;gap:8px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .horsebar select#horsePick.ph{color:#9aa3ad}
 .horsebar select option,.horsebar select optgroup{color:var(--ink)}
@@ -151,7 +153,7 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
 .cmain,.lhead{display:grid;grid-template-columns:26px 74px minmax(110px,1.1fr) minmax(150px,1.7fr) 56px 64px 92px 80px minmax(80px,.8fr) 122px 18px;align-items:center;gap:0 8px;padding:0 8px;min-height:27px;font-size:12.5px}
 .cmain{cursor:pointer}
 .cmain>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lhead{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:2px solid var(--line);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;min-height:28px}
+.lhead{position:sticky;top:var(--hh,0px);z-index:2;background:var(--bg);border-bottom:2px solid var(--line);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;min-height:28px}
 .lhead span{cursor:pointer}
 .venue{font-weight:600;color:var(--brand-2)}
 .pk{display:none}
@@ -695,6 +697,8 @@ function stepDist(d){ const q=$("#distQ"); clearTimeout(dT); let v=q.value===""?
 $$(".wk").forEach(b=>b.onclick=()=>{ const w=+b.dataset.wk; HL.has(w)?HL.delete(w):HL.add(w); b.classList.toggle("on",HL.has(w)); render(false); });
 $("#distDn").onclick=()=>stepDist(-100);
 $("#distUp").onclick=()=>stepDist(100);
+function setHH(){ document.documentElement.style.setProperty("--hh",$("body>header").offsetHeight+"px"); }
+addEventListener("resize",setHH); setHH();
 function fitAside(){ const a=$("#side"); if(innerWidth<=980){ a.style.maxHeight=""; a.style.height=""; a.style.top=""; return; } const h=Math.max(0,$("header").getBoundingClientRect().bottom); a.style.top=h+"px"; a.style.maxHeight=(innerHeight-h)+"px"; a.style.height=(innerHeight-h)+"px"; }
 addEventListener("scroll",fitAside,{passive:true}); addEventListener("resize",fitAside); fitAside();
 /* the pull-tab stays fixed on screen, level with where the horse bar sits at the top of the page */
