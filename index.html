@@ -670,7 +670,7 @@ $$(".sec .chip[data-days]").forEach(c=>c.onclick=()=>{
 $("#allStates").onclick=()=>{ const all=chipVals("#states").length===STATES.length; setChips("#states",all?[]:STATES); render(true); };
 // Reset = clear everything (Victoria only, no picnic races): no horse, no distance, every class and track type
 function resetAll(){
-  applyHorse(""); defaults();
+  freshHorse(); applyHorse(""); defaults();
   $$("#kinds input").forEach(k=>k.checked=true);
   setChips("#states",["VIC"]); setChips("#types",TYPES); setChips("#cats",CATS.map(c=>c[0]).filter(c=>c!=="Picnic"));
   HL.clear(); $$(".wk").forEach(b=>b.classList.remove("on"));
@@ -843,9 +843,11 @@ function fillPick(){
   pickTone();
 }
 function pickTone(){ const el=$("#horsePick"); el.classList.toggle("ph",!el.value); }
-$("#horsePick").onchange=e=>{ pickTone(); applyHorse(e.target.value); viewSelOnly=false; render(true); };
+// a new horse starts with a clean slate: no ticked or opened races from the last one
+function freshHorse(){ selected.clear(); saveSel(); openIds.clear(); viewSelOnly=false; }
+$("#horsePick").onchange=e=>{ pickTone(); freshHorse(); applyHorse(e.target.value); render(true); };
 $("#hName").addEventListener("input",()=>{ // typing a different name = a one-off horse, so drop the list selection
-  if(currentHorseId&&horses[currentHorseId]&&hName()!==horses[currentHorseId].name){ currentHorseId=""; $("#horsePick").value=""; pickTone(); }
+  if(currentHorseId&&horses[currentHorseId]&&hName()!==horses[currentHorseId].name){ currentHorseId=""; $("#horsePick").value=""; pickTone(); freshHorse(); }
 });
 /* ---------- boot ---------- */
 rebuild();
