@@ -82,12 +82,12 @@ header h1{margin:0;font-size:17px;font-weight:600;letter-spacing:2.5px;text-tran
 body:not(.fopen) aside{visibility:hidden}
 #scrim{display:none}
 /* pull-tab attached to the sidebar edge */
-.ftab-wrap{position:fixed;top:97px;left:0;height:0;z-index:30}
+.ftab-wrap{position:fixed;top:97px;left:0;height:0;z-index:36}
 .ftab{position:absolute;left:0;top:0;width:27px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;
   border:1px solid #cfd5dc;border-left:0;border-radius:0 9px 9px 0;background:#fff;color:var(--ink);cursor:pointer;box-shadow:2px 1px 5px rgba(20,40,70,.08)}
 .ftab:hover{background:#eef1f5}
 .ftab .arr{font-size:16px;line-height:10px;color:var(--muted);transition:transform .18s}
-body.fopen .ftab{background:#fafafa;box-shadow:none}
+body.fopen .ftab{background:#fafafa;border-color:var(--line);box-shadow:5px 3px 10px -4px rgba(20,40,70,.16)}
 body.fopen .ftab .arr{transform:rotate(180deg)}
 .fsum{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:10px 0 0;font-size:12px}
 .fsum .fc{background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:#34465b;cursor:pointer}
