@@ -1,0 +1,14 @@
+# Mac system files
+.DS_Store
+._*
+
+# Never publish the full stable spreadsheets
+*.xlsx
+*.xls
+*.xlsm
+*Horse List*
+*Horselist*
+
+# Editor / Python leftovers
+__pycache__/
+*.pyc

@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cumani Racing — Race Planner</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Race Planner">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --ink:#1b2430; --muted:#5f6b7a; --line:#e3e6ea; --bg:#f5f6f8; --card:#fff;
+  --brand:#14365c; --brand-2:#1f5a96; --accent:#b8862b; --ok:#2f7d4f; --warn:#b5462f; --chip:#eef2f7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+button,input,select{font:inherit;color:inherit}
+header{background:#fff;color:var(--ink);padding:10px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-bottom:3px solid var(--brand)}
+header{justify-content:space-between;flex-wrap:nowrap}
+.htitle{display:flex;flex-direction:column;gap:4px;min-width:0}
+header h1{margin:0;font-size:17px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--brand);white-space:nowrap}
+.hlogo{height:60px;width:auto;display:block;flex:none}
+@media (max-width:600px){
+  .hlogo{height:40px}
+  header{gap:10px;padding:8px 14px}
+  header h1{font-size:14px;letter-spacing:2px}
+  .datasrc{font-size:11px}
+}
+.horsebar{display:flex;gap:8px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.horsebar select#horsePick.ph{color:#9aa3ad}
+.horsebar select option,.horsebar select optgroup{color:var(--ink)}
+.horsebar .menuwrap{margin-left:auto}
+@media (max-width:520px){
+  .horsebar{display:grid;grid-template-columns:minmax(0,190px) auto 1fr auto;grid-template-areas:"pick r . menu" "dist dist dist dist";gap:8px}
+  .horsebar #horsePick{grid-area:pick;width:100%}
+  .horsebar .rbox{grid-area:r}
+  .horsebar .menuwrap{grid-area:menu;margin-left:0}
+  .horsebar .row2{grid-area:dist;justify-self:start}
+}
+.horsebar{flex-wrap:wrap;row-gap:8px}
+.horsebar input.rbox{width:44px;min-width:44px;height:36px;flex:none;border:1px solid #cfd5dc;border-radius:6px;background:#fff;text-align:center;font-size:14px;font-weight:600;color:var(--ink);padding:0}
+.horsebar input.rbox::placeholder{color:#9aa3ad;font-weight:500}
+.horsebar input.rbox:focus{outline:0;border-color:var(--brand-2)}
+.row2{display:flex;gap:8px;align-items:center}
+.wk{height:36px;padding:0 11px;border-radius:6px;border:1px solid #cfd5dc;background:#fff;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.wk::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c)}
+.wk2{--c:#e0a800;--t:#fff6dc} .wk3{--c:#2f8f6b;--t:#e4f4ec}
+.wk.on{background:var(--t);border-color:var(--c);color:var(--ink)}
+.card.hl2{background:#fff6dc;box-shadow:inset 4px 0 0 #e0a800}
+.card.hl3{background:#e4f4ec;box-shadow:inset 4px 0 0 #2f8f6b}
+.card.hl2:hover{background:#fdefc6}.card.hl3:hover{background:#d6eee2}
+.dayhead.hl2{background:#fbe9b4;box-shadow:inset 4px 0 0 #e0a800}
+.dayhead.hl3{background:#cfeadc;box-shadow:inset 4px 0 0 #2f8f6b}
+.distbox{display:flex;align-items:center;border:1px solid #cfd5dc;border-radius:6px;background:#fff;height:36px;overflow:hidden}
+.distbox:focus-within{border-color:var(--brand-2)}
+.dstep{border:0;background:#f3f5f8;width:28px;height:100%;cursor:pointer;font-size:18px;line-height:1;color:var(--ink);padding:0}
+.dstep:hover{background:#e6ebf1}
+.distbox input[type=number]{border:0;border-radius:0;outline:0;width:58px;min-width:0;flex:none;height:100%;padding:0 2px 0 8px;font-size:14px;text-align:left;background:transparent;-moz-appearance:textfield;appearance:textfield}
+.distbox input::-webkit-outer-spin-button,.distbox input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.distbox input::placeholder{color:#9aa3ad}
+.dunit{color:var(--muted);font-size:12.5px;padding-right:6px}
+.selbanner{display:none;margin-top:10px;font-size:13px;color:var(--brand);background:#eef4fb;border:1px solid #d6e3f2;border-radius:8px;padding:7px 12px}
+.selbanner.on{display:block}
+.acount{position:sticky;bottom:0;margin-top:auto;background:#eef2f7;border-top:1px solid var(--line);padding:10px 14px 12px;font-weight:600;font-size:14px;color:var(--brand)}
+.acount small{display:block;font-weight:500;color:var(--muted);font-size:12px;margin-top:1px}
+.horsebar select{flex:0 1 190px;width:190px;height:36px;min-width:140px;padding:8px 30px 8px 10px;border-radius:6px;border:1px solid #cfd5dc;color:var(--ink);font-size:14px;text-align:left;text-align-last:left;-webkit-appearance:none;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235f6b7a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center;cursor:pointer}
+.btn{border:1px solid var(--brand-2);background:#fff;color:var(--brand-2);padding:7px 12px;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap}
+.btn:hover{background:#f0f5fb}
+.btn.solid{background:var(--brand-2);color:#fff}
+.btn.solid:hover{background:#184c80}
+.btn.ghost{border-color:transparent;background:transparent;color:#fff}
+.btn.ghost:hover{background:rgba(255,255,255,.12)}
+.btn.small{padding:4px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:default}
+.datasrc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.datasrc label{cursor:pointer;text-decoration:underline}
+.wrap{display:grid;grid-template-columns:0 1fr;min-height:calc(100vh - 62px);transition:grid-template-columns .18s}
+body.fopen .wrap{grid-template-columns:minmax(260px,1fr) 2fr}
+body:not(.fopen) aside{visibility:hidden}
+#scrim{display:none}
+/* pull-tab attached to the sidebar edge */
+.ftab-wrap{position:fixed;top:97px;left:0;height:0;z-index:30}
+.ftab{position:absolute;left:-35px;top:0;width:27px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;
+  border:1px solid #cfd5dc;border-left:0;border-radius:0 9px 9px 0;background:#fff;color:var(--ink);cursor:pointer;box-shadow:2px 1px 5px rgba(20,40,70,.08)}
+.ftab:hover{background:#eef1f5}
+.ftab .arr{font-size:16px;line-height:10px;color:var(--muted);transition:transform .18s}
+body.fopen .ftab{background:#fafafa;box-shadow:none}
+body.fopen .ftab .arr{transform:rotate(180deg)}
+.fsum{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:10px 0 0;font-size:12px}
+.fsum .fc{background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:#34465b;cursor:pointer}
+.fsum .fc:hover{border-color:var(--brand-2)}
+.fsum .fc b{font-weight:600;color:var(--muted);margin-right:3px}
+aside{overscroll-behavior:contain;background:#fafafa;border-right:1px solid var(--line);padding:4px 0 0;display:flex;flex-direction:column;overflow:hidden auto;position:sticky;top:0;max-height:100vh;align-self:start;min-width:0}
+.aclose{display:flex;justify-content:space-between;align-items:center;padding:8px 14px 4px;font-weight:700;font-size:13px}
+.sec{padding:10px 14px;border-bottom:1px solid var(--line)}
+.sec h3{margin:0 0 7px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.sec h3 small{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+.row{display:flex;gap:8px;align-items:center}
+.row+.row{margin-top:6px}
+.row label.l{width:50px;color:var(--muted);font-size:12.5px;flex:none}
+input[type=text],input[type=number],input[type=date],select.f{width:100%;padding:5px 7px;font-size:13px;border:1px solid #cfd5dc;border-radius:6px;background:#fff;min-width:0}
+input[type=number]{appearance:textfield}
+.to{color:var(--muted);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid #cfd5dc;background:#fff;padding:3px 8px;border-radius:999px;cursor:pointer;font-size:12.5px;user-select:none}
+.chip.on{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.checks label{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:13px;cursor:pointer}
+.checks input{width:16px;height:16px;accent-color:var(--brand-2)}
+.hint{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.4}
+.horsehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.horsehead b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input[type=date]{padding:5px 4px;font-size:12px}
+.savemsg{font-size:12px;color:var(--ok);min-height:16px;margin-top:6px}
+main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;container-name:res}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+.top h2{margin:0;font-size:24px;font-weight:600}
+.top h2 small{font-size:14px;color:var(--muted);font-weight:500;margin-left:8px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.menuwrap{position:relative}
+.iconbtn{position:relative;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfd5dc;border-radius:8px;background:#fff;color:var(--ink);cursor:pointer;padding:0}
+.iconbtn:hover,.menuwrap.on .iconbtn{background:#eef1f5}
+.iconbtn .badge{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--brand-2);color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;display:none}
+.iconbtn .badge.on{display:block}
+.menu{position:absolute;right:0;top:calc(100% + 6px);min-width:210px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(20,40,70,.14);padding:5px;display:none;z-index:15}
+.menuwrap.on .menu{display:block}
+.menu .mitem{display:block;padding:8px 10px;border-radius:6px;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.menu .mitem:hover{background:#f0f4f9}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:6px;font-size:13.5px;cursor:pointer;color:var(--ink)}
+.menu button:hover:not(:disabled){background:#f0f4f9}
+.menu button:disabled{color:#9aa4b1;cursor:default}
+.msep{height:1px;background:var(--line);margin:4px 6px}
+#list{margin-top:12px}
+
+.bar2{display:flex;justify-content:space-between;align-items:center;margin:8px 0;gap:10px;flex-wrap:wrap}
+.bar2 .row{margin:0}
+.bar2 select{padding:6px 8px;border:1px solid #cfd5dc;border-radius:6px;background:#fff}
+.linkish{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;text-decoration:underline;padding:0}
+.search{max-width:280px}
+.card{background:var(--card);border-bottom:1px solid var(--line)}
+.card:hover{background:#f7f9fc}
+.card.sel{background:#eef4fb}
+.card.shut .cmain,.card.shut .cmain *{color:#a8b0ba;font-weight:400}
+.card.shut .tag{opacity:.5}
+.card.shut .cmain .c-noms.closed{color:#c49488}
+.card.shut .selbox input{opacity:.6}
+.cmain,.lhead{display:grid;grid-template-columns:26px 74px minmax(110px,1.1fr) minmax(150px,1.7fr) 56px 64px 92px 80px minmax(80px,.8fr) 122px 18px;align-items:center;gap:0 8px;padding:0 8px;min-height:27px;font-size:12.5px}
+.cmain{cursor:pointer}
+.cmain>div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lhead{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:2px solid var(--line);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;min-height:28px}
+.lhead span{cursor:pointer}
+.venue{font-weight:600;color:var(--brand-2)}
+.pk{display:none}
+.st{color:var(--muted);font-size:11.5px;margin-left:4px;font-weight:500}
+.rname{font-weight:500}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.mut{color:var(--muted);font-size:12px}
+.tag{background:var(--chip);border-radius:3px;padding:1px 5px;font-size:11px;color:#34465b;margin-left:5px}
+.tag.grp{background:#f6ecd6;color:#7a5612;font-weight:600}
+.tag.trial{background:#eceff3;color:#666}
+.tag.cond{background:#fff3e0;color:#9a5b00}
+.closed{color:var(--warn);font-weight:600}
+.soon{color:var(--accent);font-weight:600}
+.selbox input{width:16px;height:16px;accent-color:var(--brand-2);cursor:pointer;margin:0;display:block}
+.chev{text-align:center;color:var(--muted);font-size:14px;user-select:none}
+.dayhead{font-size:11px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.5px;padding:7px 8px 3px;background:var(--bg);border-bottom:1px solid var(--line)}
+#list{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:visible}
+.detail{display:none;border-top:1px dashed var(--line);padding:10px 16px 12px 44px;background:#fbfbfc;font-size:13px}
+.card.open .detail{display:block}
+.card.open .chev{transform:rotate(180deg)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 18px}
+.dgrid div span{display:block;font-size:11.5px;color:var(--muted)}
+.cond{margin-top:10px;font-size:12.5px;color:#3c4a5a;white-space:pre-wrap;max-height:180px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px}
+.empty{padding:50px 20px;text-align:center;color:var(--muted)}
+.more{text-align:center;margin:16px 0}
+.modal{position:fixed;inset:0;background:rgba(20,30,45,.45);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
+.modal.on{display:flex}
+.mbox{background:#fff;border-radius:10px;max-width:760px;width:100%;max-height:86vh;display:flex;flex-direction:column}
+.mbox header{border-radius:10px 10px 0 0;justify-content:space-between;background:var(--brand);color:#fff;border:0;padding:14px 20px}
+.mbox textarea{flex:1;margin:14px;min-height:340px;font:12.5px/1.5 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:6px;padding:10px}
+.mfoot{padding:0 14px 14px;display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1b2430;color:#fff;padding:9px 16px;border-radius:6px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.mobile-toggle{display:none}
+@media (max-width:980px){
+  .wrap{grid-template-columns:1fr}
+  body.fopen .wrap{grid-template-columns:1fr}
+  /* phone/tablet: sidebar slides over the results as a drawer, leaving a strip visible */
+  aside{position:fixed;top:0;left:0;bottom:0;height:100vh;height:100dvh;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:calc(100% - 48px);max-width:420px;max-height:none;z-index:40;box-shadow:6px 0 22px rgba(20,40,70,.22);transform:translateX(-100%);transition:transform .2s,visibility .2s}
+  body.fopen aside{transform:none}
+  body.fopen{overflow:hidden}
+  #scrim{position:fixed;inset:0;background:rgba(20,30,45,.28);z-index:39;display:none}
+  body.fopen #scrim{display:block}
+  .ftab-wrap{z-index:41}
+  .ftab{left:0}
+}
+/* results columns adapt to the space the results area actually has */
+@container res (max-width:1120px){
+  .cmain,.lhead{grid-template-columns:26px 74px minmax(100px,1fr) minmax(130px,1.4fr) 54px 62px 78px 118px 16px}
+  .c-age,.c-bonus{display:none}
+  /* sorted by date: the day headings already show the date */
+  #list.bydate .c-date{display:none}
+  #list.bydate .cmain,#list.bydate .lhead{grid-template-columns:26px minmax(100px,1fr) minmax(130px,1.4fr) 54px 62px 78px 118px 16px}
+}
+@container res (max-width:760px){
+  .cmain,.lhead{grid-template-columns:22px 72px minmax(0,1fr) minmax(0,1.3fr) 50px 76px 16px;gap:0 6px}
+  .c-class,.c-noms{display:none}
+  .actions .btn{padding:6px 9px}
+  #list.bydate .cmain,#list.bydate .lhead{grid-template-columns:22px minmax(82px,1.15fr) minmax(0,1fr) 48px 70px 14px}
+}
+@container res (max-width:420px){
+  .cmain .venue{font-size:12px} .c-venue .st{display:none}
+}
+@container res (max-width:560px){
+  .pfull{display:none} .pk{display:inline}
+  #list.bydate .cmain,#list.bydate .lhead{grid-template-columns:22px minmax(82px,1fr) minmax(0,1.2fr) 46px 40px 14px}
+}
+.sec .row input[type=number]{max-width:140px}
+/* iPhone Safari zooms into any box with text under 16px and doesn't zoom back out; keep entry boxes at 16px on touch screens */
+@media (max-width:980px),(pointer:coarse){
+  input[type=text],input[type=number],input[type=date],select,select.f,.horsebar select,.horsebar input.rbox,.distbox input[type=number],.mbox textarea{font-size:16px}
+  .distbox input[type=number]{width:62px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="htitle">
+    <h1>Race Planner</h1>
+    <div class="datasrc"><span id="srcInfo"></span></div>
+  </div>
+  <img class="hlogo" src="assets/logo.png" alt="Cumani Racing">
+</header>
+
+<div id="scrim"></div>
+<div class="wrap">
+<aside id="side">
+  <div class="aclose">Filters <span><button class="linkish" id="resetF">Reset</button></span></div>
+  <div class="sec" id="horseSec">
+    <h3>Horse</h3>
+    <div class="row"><label class="l">Name</label><input type="text" id="hName" placeholder="Horse name"></div>
+    <div class="row"><label class="l">Age</label>
+      <select class="f" id="hAge"><option value="">Any</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8">8+</option></select>
+      <label class="l" style="width:auto">Sex</label>
+      <select class="f" id="hSex"><option value="">Any</option><option>Colt</option><option>Horse</option><option>Gelding</option><option>Filly</option><option>Mare</option></select>
+    </div>
+    <div class="row"><label class="l">Rating</label><input type="number" id="hRating" placeholder="e.g. 64" min="0" max="140">
+      <label class="l" style="width:auto">Wins</label><input type="number" id="hWins" placeholder="career" min="0" max="50"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Distance</h3>
+    <div class="row"><input type="number" id="distMin" placeholder="min m" step="100"><span class="to">to</span><input type="number" id="distMax" placeholder="max m" step="100"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Race class</h3>
+    <div class="checks" id="kinds">
+      <label><input type="checkbox" value="maiden" checked> Maidens</label>
+      <label><input type="checkbox" value="class" checked> Class 1 – 6</label>
+      <label><input type="checkbox" value="bm" checked> Benchmark &amp; rating races</label>
+      <label><input type="checkbox" value="open" checked> Open, restricted &amp; other</label>
+      <label><input type="checkbox" value="group"> Group &amp; Listed</label>
+    </div>
+    <div class="row" style="margin-top:10px"><label class="l">BM range</label><input type="number" id="bmMin" placeholder="from"><span class="to">to</span><input type="number" id="bmMax" placeholder="to"></div>
+    <div class="hint">Set from the rating (−4 to +6).</div>
+  </div>
+
+  <div class="sec">
+    <h3>Date <small id="dateSpan"></small></h3>
+    <div class="row"><input type="date" id="dFrom"><span class="to">to</span><input type="date" id="dTo"></div>
+    <div class="row chips" style="margin-top:8px">
+      <span class="chip" data-days="14">2 wks</span><span class="chip" data-days="28">4 wks</span><span class="chip" data-days="56">8 wks</span><span class="chip" data-days="all">All</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3>State <button class="linkish" id="allStates">all</button></h3>
+    <div class="chips" id="states"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Track type</h3>
+    <div class="chips" id="types"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Meeting type</h3>
+    <div class="chips" id="cats"></div>
+  </div>
+
+  <div class="sec">
+    <h3>Sort &amp; search</h3>
+    <div class="row"><label class="l">Sort by</label>
+      <select class="f" id="sortBy">
+        <option value="date">Date</option>
+        <option value="prize">Prize money (high–low)</option>
+        <option value="noms">Nominations closing</option>
+        <option value="dist">Distance</option>
+        <option value="venue">Venue</option>
+      </select></div>
+    <div class="row"><label class="l">Search</label><input type="text" id="q" placeholder="Venue, race or bonus (e.g. VOBIS)"></div>
+  </div>
+
+  <div class="acount" id="count">0 races found</div>
+</aside>
+
+<main>
+  <div class="ftab-wrap"><button class="ftab" id="toggleFilters" title="Show or hide filters" aria-label="Show or hide filters"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="3"/><line x1="7.5" y1="7" x2="7.5" y2="13" stroke-linecap="round"/></svg><span class="arr" aria-hidden="true">›</span></button></div>
+  <div class="horsebar">
+    <select id="horsePick" aria-label="Choose a horse"><option value="" disabled hidden>Horse</option></select>
+    <input type="text" id="rBox" class="rbox" placeholder="R" inputmode="numeric" maxlength="3" title="Rating (M = maiden)" aria-label="Rating">
+    <div class="row2">
+    <div class="distbox" title="Races within 200 m either side of this distance">
+      <button type="button" class="dstep" id="distDn" aria-label="Shorter">‹</button>
+      <input type="number" id="distQ" placeholder="Dist." step="100" min="0" inputmode="numeric" aria-label="Distance in metres (± 200 m)">
+      <span class="dunit">m</span>
+      <button type="button" class="dstep" id="distUp" aria-label="Longer">›</button>
+    </div>
+    <button type="button" class="wk wk2" data-wk="14" title="Highlight races 2 weeks from today (±2 days)">2 wks</button>
+    <button type="button" class="wk wk3" data-wk="21" title="Highlight races 3 weeks from today (±2 days)">3 wks</button>
+    </div>
+    <div class="menuwrap">
+      <button class="iconbtn" id="menuBtn" title="Selected races" aria-label="Selected races menu" aria-haspopup="true" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><line x1="3.5" y1="5.5" x2="16.5" y2="5.5"/><line x1="3.5" y1="10" x2="16.5" y2="10"/><line x1="3.5" y1="14.5" x2="16.5" y2="14.5"/></svg><span class="badge" id="selBadge"></span></button>
+      <div class="menu" id="menu" role="menu">
+        <button role="menuitem" id="exportSel" disabled>Export selected</button>
+        <button role="menuitem" id="copySel" disabled>Copy selected</button>
+        <button role="menuitem" id="viewSel" disabled>View selected</button>
+        <div class="msep"></div>
+        <button role="menuitem" id="selAll">Select all shown</button>
+        <button role="menuitem" id="clearSel">Clear selected (<span id="selN">0</span>)</button>
+        <div class="msep"></div>
+        <label role="menuitem" class="mitem" id="csvItem">Load new CSV…<input type="file" id="csvIn" accept=".csv,text/csv" hidden></label>
+      </div>
+    </div>
+  </div>
+  <div class="selbanner" id="selBanner">Showing selected races only · <button class="linkish" id="selBack">Back to all results</button></div>
+  <div id="list"></div>
+  <div class="more" id="moreWrap" style="display:none"><button class="btn" id="moreBtn">Show more</button></div>
+</main>
+</div>
+
+<div class="modal" id="modal"><div class="mbox">
+  <header><b id="mTitle">Selected races</b><button class="btn ghost" id="mClose">Close</button></header>
+  <textarea id="mText" readonly></textarea>
+  <div class="mfoot"><span class="hint" id="mHint"></span><button class="btn solid" id="mCopy">Copy</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(async function(){
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const AGEW={Two:2,Three:3,Four:4,Five:5,Six:6,Seven:7,Eight:8};
+const STATES=["VIC","NSW","QLD","SA","WA","TAS","NT"], TYPES=["Metro","Provincial","Country"], CATS=[["Professional","Races"],["Trial","Trials"],["Jumpout","Jump-outs"],["Picnic","Picnic"]];
+
+/* ---------- parsing ---------- */
+function parseRaceDate(s){ // 26-Oct-26
+  const m=/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/.exec(s||''); if(!m) return null;
+  let y=+m[3]; if(y<100) y+=2000; return new Date(y,MON[m[2]],+m[1]);
+}
+function parseDT(s){ // 00:00 Tue 20 Oct 2026
+  const m=/(\d{1,2}):(\d{2})\s+\w{3}\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/.exec(s||''); if(!m) return null;
+  return new Date(Date.UTC(+m[5],MON[m[4]],+m[3],+m[1],+m[2])); // CSV times are UTC
+}
+function money(s){ const n=parseFloat(String(s||'').replace(/[^0-9.]/g,'')); return isNaN(n)?0:n; }
+function ageRule(s){
+  if(!s||/No age/i.test(s)) return null;
+  const nums=[...s.matchAll(/(Two|Three|Four|Five|Six|Seven|Eight)-Years?-Old/g)].map(m=>AGEW[m[1]]);
+  if(!nums.length) return null;
+  if(/Upwards/i.test(s)) return {min:Math.min(...nums)};
+  return {set:nums};
+}
+const SEXR={"Fillies & Mares":["Filly","Mare"],"Fillies":["Filly"],"Mares":["Mare"],"C,G&E":["Colt","Horse","Gelding"],"C&G":["Colt","Gelding"],"E&G":["Colt","Horse","Gelding"]};
+/* drop betting-sponsor prefixes so the course name shows in the list: "bet365 Park Kyneton" -> "Kyneton" */
+function shortVenue(v){
+  const s=(v||"").replace(/^(bet365(\s+Park)?|Sportsbet|Ladbrokes|Picklebet(\s+Park)?|Southside|Aquis(\s+Park)?|Thomas Farms RC|TAB|Neds|PointsBet|Pointsbet)[\s-]+/i,"").trim();
+  return s||v;
+}
+function classKind(cls,group){
+  if(group) return {k:"group"};
+  let m;
+  if(cls==="Maiden") return {k:"maiden"};
+  if((m=/^Class (\d)$/.exec(cls))) return {k:"class",n:+m[1]};
+  if((m=/^BM(\d+)$/.exec(cls))) return {k:"bm",n:+m[1]};
+  if((m=/^(?:BM|RTG)(\d+)\+$/.exec(cls))) return {k:"rtgmin",n:+m[1]};
+  if((m=/^0 - (\d+)$/.exec(cls))) return {k:"rtgmax",n:+m[1]};
+  return {k:"open"};
+}
+function normalise(rows){
+  return rows.map((r,i)=>{
+    const g=k=>(r[k]==null?'':String(r[k]).trim());
+    const date=parseRaceDate(g("Date"));
+    const cls=g("Class"), grp=g("Group");
+    const late=parseDT(g("Late Nominations")), noms=parseDT(g("Nominations"));
+    return {
+      id:[g("Date"),g("Venue"),g("Race Name"),g("Distance"),i].join("|"),
+      raw:r, date, dateS:g("Date"), state:g("State"), venue:g("Venue"), vshort:shortVenue(g("Venue")), type:g("Type"), cat:g("Category"),
+      name:g("Race Name"), age:g("Age"), sex:g("Sex"), cls, grp, dist:parseInt(g("Distance"))||0,
+      wg:g("Weight Group"), field:g("Field Size"), cond:g("Special Conditions"),
+      noms, late, nomsS:g("Nominations"), lateS:g("Late Nominations"), acc:parseDT(g("Acceptances")), accS:g("Acceptances"),
+      riders:parseDT(g("Riders")), weights:parseDT(g("Weights Publishing Time")),
+      prize:money(g("Prize Money")), prizeS:g("Prize Money"), bonus:g("Bonus Scheme"), bonusM:g("Bonus Money"), trophy:g("Trophy Money"),
+      p:[1,2,3,4,5].map(n=>g("Prize Money "+["1st","2nd","3rd","4th","5th"][n-1])),
+      minW:g("Min Weight"), maxW:g("Max Weight"), topW:g("Top Weight"), track:g("Track Rating"),
+      ageR:ageRule(g("Age")), kind:classKind(cls,grp),
+      text:(g("Venue")+" "+g("Race Name")+" "+g("Bonus Scheme")+" "+cls+" "+grp).toLowerCase()
+    };
+  }).filter(r=>r.date);
+}
+
+/* ---------- state ---------- */
+let SRC, RACES=[];
+/* data lives in data/races.csv (racing.com export) and data/horses.csv (Name, Age, Sex, Rating, In Work) */
+async function getCSV(p){
+  const r=await fetch(p,{cache:"no-cache"}); if(!r.ok) throw new Error(p+" ("+r.status+")");
+  return Papa.parse(await r.text(),{header:true,skipEmptyLines:true,transformHeader:h=>h.replace(/^\ufeff/,"").trim()}).data;
+}
+let raceRows, horseRows;
+$("#list").innerHTML='<div class="empty">Loading races…</div>';
+try{ [raceRows,horseRows]=await Promise.all([getCSV("data/races.csv"),getCSV("data/horses.csv")]); }
+catch(e){ $("#list").innerHTML='<div class="empty">Couldn’t load the race data ('+String(e.message).replace(/[<>&]/g,"")+'). Check your connection and refresh.</div>'; return; }
+try{ localStorage.removeItem("rp_csv"); }catch(e){}
+SRC="data/races.csv"; RACES=normalise(raceRows.filter(r=>r["Race Name"]&&r["Date"]));
+
+let selected=new Set(LS.get("rp_sel",[]));
+let HL=new Set(); let viewSelOnly=false, showN=150, openIds=new Set();
+let horses={}; let currentHorseId="";
+
+const today=new Date(); today.setHours(0,0,0,0);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const fromIso=s=>{if(!s)return null;const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c)};
+const fmtD=d=>d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+const fmtDT=d=>d?d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"})+" "+d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"}).replace(" ",""):"—";
+const fmtS=d=>d?d.toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"}).replace(",",""):"";
+const fmtT=d=>{const h=d.getHours(),m=d.getMinutes();return (h%12||12)+(m?":"+String(m).padStart(2,"0"):"")+(h<12?"am":"pm")};
+const fmtST=d=>d?fmtS(d)+" "+fmtT(d):"—";
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function chipGroup(el,items,onSet){
+  el.innerHTML=items.map(([v,l])=>`<span class="chip" data-v="${esc(v)}">${esc(l)}</span>`).join("");
+  el.addEventListener("click",e=>{const c=e.target.closest(".chip"); if(!c) return; c.classList.toggle("on"); onSet&&onSet(); render(true);});
+}
+chipGroup($("#states"),STATES.map(s=>[s,s]));
+chipGroup($("#types"),TYPES.map(s=>[s,s]));
+chipGroup($("#cats"),CATS);
+const chipVals=sel=>$$(sel+" .chip.on").map(c=>c.dataset.v);
+const setChips=(sel,vals)=>$$(sel+" .chip").forEach(c=>c.classList.toggle("on",vals.includes(c.dataset.v)));
+
+function dayChip(d){ $$(".sec .chip[data-days]").forEach(c=>c.classList.toggle("on",c.dataset.days===d)); }
+function allDates(){
+  const ds=RACES.map(r=>+r.date); if(!ds.length) return;
+  $("#dFrom").value=iso(today); $("#dTo").value=iso(new Date(Math.max(...ds))); dayChip("all");
+}
+function defaults(){
+  allDates();
+  $("#distMin").value=""; $("#distMax").value="";
+  $$("#kinds input").forEach(i=>i.checked=i.value!=="group");
+  $("#bmMin").value=""; $("#bmMax").value="";
+  setChips("#states",["VIC"]); setChips("#types",TYPES); setChips("#cats",["Professional"]);
+  $("#q").value="";
+}
+
+/* ---------- filtering ---------- */
+function getF(){
+  const n=id=>{const v=$(id).value;return v===""?null:+v};
+  return {
+    age:n("#hAge"), sex:$("#hSex").value, rating:n("#hRating"), wins:n("#hWins"),
+    from:fromIso($("#dFrom").value), to:fromIso($("#dTo").value),
+    dmin:n("#distMin"), dmax:n("#distMax"), bmMin:n("#bmMin"), bmMax:n("#bmMax"),
+    kinds:$$("#kinds input:checked").map(i=>i.value),
+    states:chipVals("#states"), types:chipVals("#types"), cats:chipVals("#cats"),
+    q:$("#q").value.trim().toLowerCase()
+  };
+}
+function nomsClosed(r,now){
+  return !!(r.noms&&r.noms<now); // late nominations deliberately ignored
+}
+function passes(r,f,now){
+  if(f.from&&r.date<f.from) return false;
+  if(f.to&&r.date>f.to) return false;
+  if(f.states.length&&!f.states.includes(r.state)) return false;
+  if(f.types.length&&!f.types.includes(r.type)) return false;
+  if(f.cats.length&&!f.cats.includes(r.cat)) return false;
+  if(f.dmin!=null&&r.dist<f.dmin) return false;
+  if(f.dmax!=null&&r.dist>f.dmax) return false;
+  if(f.q&&!f.q.split(/\s+/).every(w=>r.text.includes(w))) return false;
+  // age
+  if(f.age!=null&&r.ageR){
+    const a=f.age;
+    if(r.ageR.min!=null&&a<r.ageR.min) return false;
+    if(r.ageR.set&&!(r.ageR.set.includes(a)||(a>=8&&r.ageR.set.some(x=>x>=8)))) return false;
+  }
+  // sex
+  if(f.sex&&SEXR[r.sex]&&!SEXR[r.sex].includes(f.sex)) return false;
+  // class
+  const k=r.kind;
+  const bucket=k.k==="rtgmin"||k.k==="rtgmax"?"bm":k.k;
+  // maidens also see age-restricted races open to any class (e.g. 2YO handicaps, Blue Diamond preludes)
+  const ageOnly=f.kinds.includes("maiden")&&f.wins===0&&r.ageR&&r.ageR.set&&(bucket==="open"||bucket==="group");
+  if(!f.kinds.includes(bucket)&&!ageOnly) return false;
+  if(k.k==="maiden"&&f.wins!=null&&f.wins>0) return false;
+  if(k.k==="class"&&f.wins!=null&&f.wins>k.n) return false;
+  if(k.k==="bm"){ if(f.bmMin!=null&&k.n<f.bmMin) return false; if(f.bmMax!=null&&k.n>f.bmMax) return false; }
+  if(k.k==="rtgmax"&&f.rating!=null&&f.rating>k.n) return false;
+  if(k.k==="rtgmin"&&f.rating!=null&&f.rating<k.n) return false;
+  return true;
+}
+const SORTS={
+  date:(a,b)=>a.date-b.date||a.vshort.localeCompare(b.vshort)||a.dist-b.dist,
+  prize:(a,b)=>b.prize-a.prize||a.date-b.date,
+  noms:(a,b)=>((a.noms||a.date)-(b.noms||b.date))||a.date-b.date,
+  dist:(a,b)=>a.dist-b.dist||a.date-b.date,
+  venue:(a,b)=>a.vshort.localeCompare(b.vshort)||a.date-b.date
+};
+
+/* ---------- render ---------- */
+let lastShown=[];
+function render(resetPaging){
+  if(resetPaging) showN=150;
+  syncDistQ(); syncRBox();
+  const f=getF(), now=new Date();
+  const days=f.from&&f.to?Math.round((f.to-f.from)/864e5)+1:null;
+  $("#dateSpan").textContent=days?days+" days":"";
+  // browsing with no horse and no distance: only races still open for nominations
+  const browsing=!currentHorseId&&!hName()&&f.dmin==null&&f.dmax==null;
+  let rs=viewSelOnly?RACES.filter(r=>selected.has(r.id)):RACES.filter(r=>passes(r,f,now)&&!(browsing&&nomsClosed(r,now)));
+  const sortKey=$("#sortBy").value; rs.sort(SORTS[sortKey]);
+  lastShown=rs;
+  $("#count").innerHTML=(viewSelOnly?`${rs.length} selected race${rs.length===1?"":"s"}`:`${rs.length} race${rs.length===1?"":"s"} found`)+
+    (hName()&&!viewSelOnly?` <small>for ${esc(hName())}</small>`:"");
+  const list=$("#list");
+  if(!rs.length){ summary(f); $("#selBanner").classList.toggle("on",viewSelOnly); list.innerHTML=`<div class="empty">${viewSelOnly?"No races selected yet.":"No races match. Try widening the dates, distance, states or BM range."}</div>`; $("#moreWrap").style.display="none"; updSel(); return; }
+  let html=HEAD, lastDay="";
+  rs.slice(0,showN).forEach(r=>{
+    if(sortKey==="date"){ const d=r.date.toDateString(); if(d!==lastDay){ html+=`<div class="dayhead${hlc(r)}">${r.date.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"})}</div>`; lastDay=d; } }
+    html+=card(r,now);
+  });
+  list.innerHTML=html; list.classList.toggle("bydate",sortKey==="date");
+  $("#moreWrap").style.display=rs.length>showN?"":"none";
+  $("#moreBtn").textContent=`Show more (${rs.length-showN} more)`;
+  updSel(); summary(f); $("#selBanner").classList.toggle("on",viewSelOnly);
+}
+function summary(f){
+  const c=[], add=(k,v)=>c.push(`<span class="fc"><b>${k}</b>${esc(v)}</span>`);
+  const dm=d=>d.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+  if(f.age!=null||f.sex) add("Horse",[f.age!=null?f.age+(f.age>=8?"+":"")+"yo":"",f.sex].filter(Boolean).join(" "));
+  if(f.rating!=null) add("Rating",f.rating);
+  if(f.wins!=null) add("Wins",f.wins===0?"0 (maiden)":f.wins);
+  if(f.from||f.to) add("Dates",(f.from?dm(f.from):"…")+" – "+(f.to?dm(f.to):"…"));
+  if(f.dmin!=null||f.dmax!=null) add("Dist",f.dmin!=null&&f.dmax!=null?f.dmin+"–"+f.dmax+"m":f.dmin!=null?f.dmin+"m+":"up to "+f.dmax+"m");
+  const KN={maiden:"Maidens",class:"Class",bm:"BM/rating",open:"Open",group:"Group/Listed"};
+  add("Classes",f.kinds.length?f.kinds.map(k=>KN[k]).join(", "):"none");
+  if(f.kinds.includes("bm")&&(f.bmMin!=null||f.bmMax!=null)) add("BM",f.bmMin!=null&&f.bmMax!=null?f.bmMin+"–"+f.bmMax:f.bmMin!=null?f.bmMin+"+":"up to "+f.bmMax);
+  add("States",f.states.length===STATES.length||!f.states.length?"All":f.states.join(", "));
+  if(f.types.length&&f.types.length<TYPES.length) add("Tracks",f.types.join(", "));
+  add("Meetings",f.cats.length?f.cats.map(v=>(CATS.find(x=>x[0]===v)||[,v])[1]).join(", "):"All");
+  if(f.q) add("Search",f.q);
+}
+function shortAge(s){ return s&&!/No age/.test(s)?s.replace(/(Two|Three|Four|Five|Six|Seven|Eight)-Years?-Old/g,(m,w)=>AGEW[w]+"yo").replace(" and Upwards","+").replace(/ and /g,"/").replace(/, /g,"/"):""; }
+function hlc(r){ const d=Math.round((r.date-today)/864e5); return HL.has(14)&&Math.abs(d-14)<=2?" hl2":HL.has(21)&&Math.abs(d-21)<=2?" hl3":""; }
+function card(r,now){
+  const closed=nomsClosed(r,now);
+  const nomsAt=r.noms;
+  const soon=!closed&&nomsAt&&(nomsAt-now)<3*864e5;
+  let tags="";
+  if(r.grp) tags+=`<span class="tag grp">${esc(r.grp)}</span>`;
+  if(r.cat!=="Professional") tags+=`<span class="tag trial">${esc(r.cat)}</span>`;
+  if(r.cond) tags+=`<span class="tag cond" title="Special conditions — click the row">!</span>`;
+  const ageSex=[shortAge(r.age),r.sex&&!/No sex/.test(r.sex)?r.sex:""].filter(Boolean).join(" · ");
+  const isSel=selected.has(r.id), isOpen=openIds.has(r.id);
+  const pl=r.p.filter(Boolean).map((v,i)=>`${["1st","2nd","3rd","4th","5th"][i]} ${v}`).join(" · ");
+  const full=`${r.venue} (${r.state} ${r.type}) — ${r.name} ${r.dist}m — ${r.cls}`;
+  return `<div class="card${isSel?" sel":""}${isOpen?" open":""}${closed?" shut":""}${hlc(r)}" data-id="${esc(r.id)}">
+  <div class="cmain" title="${esc(full)}">
+    <div class="selbox"><input type="checkbox" class="selcb" ${isSel?"checked":""} aria-label="Select race"></div>
+    <div class="mut c-date">${esc(fmtS(r.date))}</div>
+    <div class="c-venue"><span class="venue" title="${esc(r.venue)}">${esc(r.vshort)}</span><span class="st">${esc(r.state)} ${esc(r.type[0]||"")}</span></div>
+    <div><span class="rname">${esc(r.name)}</span>${tags}</div>
+    <div class="num">${r.dist}m</div>
+    <div class="c-class">${esc(r.cls.replace("No class restriction","Open"))}</div>
+    <div class="c-age mut">${esc(ageSex||"—")}</div>
+    <div class="num"><b><span class="pfull">${r.prize?"$"+Math.round(r.prize).toLocaleString("en-AU"):"—"}</span><span class="pk">${r.prize?(r.prize>=1e6?"$"+(r.prize/1e6).toFixed(r.prize%1e6?1:0)+"m":"$"+Math.round(r.prize/1e3)+"k"):"—"}</span></b></div>
+    <div class="c-bonus mut">${esc(r.bonus)}</div>
+    <div class="c-noms ${closed?"closed":soon?"soon":""}">${closed?"Closed":esc(fmtST(nomsAt))}</div>
+    <div class="chev">⌄</div>
+  </div>
+  <div class="detail">
+    <div class="dgrid">
+      <div><span>Date</span>${esc(r.date.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</div><div><span>Venue</span>${esc(r.venue)} · ${esc(r.state)} ${esc(r.type)}</div><div><span>Age / Sex</span>${esc(r.age||"—")} · ${esc(r.sex||"—")}</div>
+      <div><span>Class</span>${esc(r.cls||"—")}${r.grp?" · "+esc(r.grp):""}</div><div><span>Weights</span>${esc(r.wg||"—")}${r.topW?" · top "+esc(r.topW):""}${r.minW?" · min "+esc(r.minW):""}${r.maxW?" · max "+esc(r.maxW):""}</div>
+      <div><span>Field size</span>${esc(parseInt(r.field)?String(parseInt(r.field)):"—")}</div><div><span>Track rating</span>${esc(r.track||"—")}</div>
+      <div><span>Nominations close</span>${esc(fmtDT(r.noms))}</div><div><span>Late nominations</span>${esc(r.late?fmtDT(r.late):"—")}</div>
+      <div><span>Weights published</span>${esc(fmtDT(r.weights))}</div><div><span>Acceptances</span>${esc(fmtDT(r.acc))}</div>
+      <div><span>Riders</span>${esc(fmtDT(r.riders))}</div><div><span>Bonus</span>${esc(r.bonus||"—")}${r.bonusM?" · "+esc(r.bonusM):""}${r.trophy?" · trophy "+esc(r.trophy):""}</div>
+      <div style="grid-column:1/-1"><span>Prize breakdown</span>${esc(pl||"—")}</div>
+    </div>
+    ${r.cond?`<div class="cond">${esc(r.cond)}</div>`:""}
+  </div></div>`;
+}
+const HEAD=`<div class="lhead"><div></div><span data-s="date" class="c-date">Date</span><span data-s="venue" class="c-venue">Venue</span><span>Race</span><span data-s="dist" class="num">Dist</span><span class="c-class">Class</span><span class="c-age">Age / Sex</span><span data-s="prize" class="num">Prize</span><span class="c-bonus">Bonus</span><span data-s="noms" class="c-noms">Noms close</span><div></div></div>`;
+function updSel(){
+  const n=selected.size; $("#selN").textContent=n; $("#clearSel").disabled=!n;
+  ["#exportSel","#copySel","#viewSel"].forEach(s=>$(s).disabled=!n&&!(s==="#viewSel"&&viewSelOnly));
+  $("#viewSel").textContent=viewSelOnly?"Back to all results":`View selected (${n})`;
+  $("#exportSel").textContent=`Export selected${n?" ("+n+")":""}`;
+  $("#copySel").textContent=`Copy selected${n?" ("+n+")":""}`;
+  const bd=$("#selBadge"); bd.textContent=n; bd.classList.toggle("on",n>0);
+}
+function closeMenu(){ $(".menuwrap").classList.remove("on"); $("#menuBtn").setAttribute("aria-expanded","false"); }
+$("#menuBtn").onclick=e=>{ e.stopPropagation(); const w=$(".menuwrap"); const on=!w.classList.contains("on"); w.classList.toggle("on",on); $("#menuBtn").setAttribute("aria-expanded",on); };
+$("#menu").addEventListener("click",e=>{ if(e.target.closest("button:not(:disabled)")) closeMenu(); });
+document.addEventListener("click",e=>{ if(!e.target.closest(".menuwrap")) closeMenu(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeMenu(); });
+function saveSel(){ LS.set("rp_sel",[...selected]); }
+
+$("#list").addEventListener("click",e=>{
+  const c=e.target.closest(".card"); if(!c) return; const id=c.dataset.id;
+  if(e.target.classList.contains("selcb")){ e.target.checked?selected.add(id):selected.delete(id); c.classList.toggle("sel",e.target.checked); saveSel(); updSel(); return; }
+  if(e.target.closest(".selbox")) return;
+  if(e.target.closest(".chev")||e.target.closest(".cmain")){ c.classList.toggle("open"); c.classList.contains("open")?openIds.add(id):openIds.delete(id); }
+});
+$("#list").addEventListener("click",e=>{ const s=e.target.closest(".lhead [data-s]"); if(s){ $("#sortBy").value=s.dataset.s; render(true);} });
+// Show more: append the next batch below the current list instead of redrawing it, so the page stays where it is
+$("#moreBtn").onclick=e=>{
+  const y=scrollY, rs=lastShown, now=new Date(), byDate=$("#sortBy").value==="date";
+  let lastDay=showN>0&&rs[showN-1]?rs[showN-1].date.toDateString():"", html="";
+  rs.slice(showN,showN+150).forEach(r=>{
+    if(byDate){ const d=r.date.toDateString(); if(d!==lastDay){ html+=`<div class="dayhead${hlc(r)}">${r.date.toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"})}</div>`; lastDay=d; } }
+    html+=card(r,now);
+  });
+  showN+=150;
+  $("#list").insertAdjacentHTML("beforeend",html);
+  $("#moreWrap").style.display=rs.length>showN?"":"none";
+  $("#moreBtn").textContent=`Show more (${rs.length-showN} more)`;
+  e.currentTarget.blur(); scrollTo(0,y); updSel();
+};
+$("#sortBy").onchange=()=>render(true);
+let qT; $("#q").oninput=()=>{clearTimeout(qT);qT=setTimeout(()=>render(true),200)};
+["#dFrom","#dTo","#distMin","#distMax","#bmMin","#bmMax","#hAge","#hSex","#hWins","#hName"].forEach(s=>$(s).addEventListener("input",()=>render(true)));
+$$("#kinds input").forEach(i=>i.addEventListener("change",()=>render(true)));
+$("#hRating").addEventListener("input",()=>{ const v=$("#hRating").value; if(v!==""){ $("#bmMin").value=Math.max(0,+v-4); $("#bmMax").value=+v+6; } render(true); });
+$$(".sec .chip[data-days]").forEach(c=>c.onclick=()=>{
+  const d=c.dataset.days;
+  if(d==="all") allDates();
+  else { $("#dFrom").value=iso(today); const t=new Date(today); t.setDate(t.getDate()+(+d)); $("#dTo").value=iso(t); dayChip(d); }
+  render(true);
+});
+["#dFrom","#dTo"].forEach(x=>$(x).addEventListener("input",()=>dayChip(null)));
+$("#allStates").onclick=()=>{ const all=chipVals("#states").length===STATES.length; setChips("#states",all?[]:STATES); render(true); };
+// Reset = clear everything (Victoria only, no picnic races): no horse, no distance, every class and track type
+function resetAll(){
+  applyHorse(""); defaults();
+  $$("#kinds input").forEach(k=>k.checked=true);
+  setChips("#states",["VIC"]); setChips("#types",TYPES); setChips("#cats",CATS.map(c=>c[0]).filter(c=>c!=="Picnic"));
+  HL.clear(); $$(".wk").forEach(b=>b.classList.remove("on"));
+  viewSelOnly=false; $("#distQ").value="";
+}
+$("#resetF").onclick=()=>{ resetAll(); render(true); };
+$("#selAll").onclick=()=>{ lastShown.forEach(r=>selected.add(r.id)); saveSel(); render(false); };
+$("#clearSel").onclick=()=>{ selected.clear(); saveSel(); viewSelOnly=false; render(false); };
+$("#viewSel").onclick=()=>{ viewSelOnly=!viewSelOnly; render(true); };
+$("#selBack").onclick=()=>{ viewSelOnly=false; render(true); };
+/* rating box beside the horse picker, kept in step with the sidebar rating */
+function syncRBox(){
+  const b=$("#rBox"); if(document.activeElement===b) return;
+  const r=$("#hRating").value; b.value=r!==""?r:($("#hWins").value==="0"?"M":"");
+}
+$("#rBox").addEventListener("input",e=>{
+  const v=e.target.value.replace(/[^0-9]/g,""); if(/[^0-9]/.test(e.target.value)&&!/^m$/i.test(e.target.value)) e.target.value=v;
+  if(/^m$/i.test(e.target.value)) return;
+  $("#hRating").value=v; $("#hRating").dispatchEvent(new Event("input"));
+});
+$("#rBox").addEventListener("blur",syncRBox);
+$("#rBox").addEventListener("keydown",e=>{ if(e.key==="Enter") e.target.blur(); });
+/* quick distance box: ±200 m, kept in step with the sidebar min/max */
+const DSPAN=200;
+function syncDistQ(){
+  const q=$("#distQ"); if(document.activeElement===q) return;
+  const a=$("#distMin").value, b=$("#distMax").value;
+  q.value=a!==""&&b!==""?Math.round((+a + +b)/2):"";
+}
+function setDistQ(v){
+  if(v===""||isNaN(v)){ $("#distMin").value=""; $("#distMax").value=""; }
+  else { v=Math.max(0,Math.round(v)); $("#distMin").value=Math.max(0,v-DSPAN); $("#distMax").value=v+DSPAN; }
+  render(true);
+}
+let dT; $("#distQ").addEventListener("input",e=>{ clearTimeout(dT); const v=e.target.value; dT=setTimeout(()=>setDistQ(v===""?"":+v),250); });
+$("#distQ").addEventListener("blur",syncDistQ);
+$("#distQ").addEventListener("keydown",e=>{ if(e.key==="Enter"){ clearTimeout(dT); setDistQ(e.target.value===""?"":+e.target.value); e.target.blur(); } });
+function stepDist(d){ const q=$("#distQ"); clearTimeout(dT); let v=q.value===""?1200:+q.value+d; v=Math.max(800,v); q.value=v; setDistQ(v); }
+$$(".wk").forEach(b=>b.onclick=()=>{ const w=+b.dataset.wk; HL.has(w)?HL.delete(w):HL.add(w); b.classList.toggle("on",HL.has(w)); render(false); });
+$("#distDn").onclick=()=>stepDist(-100);
+$("#distUp").onclick=()=>stepDist(100);
+function fitAside(){ if(innerWidth<=980){ $("#side").style.maxHeight=""; $("#side").style.height=""; return; } const h=Math.max(0,$("header").getBoundingClientRect().bottom); $("#side").style.maxHeight=(innerHeight-h)+"px"; $("#side").style.height=(innerHeight-h)+"px"; }
+addEventListener("scroll",fitAside,{passive:true}); addEventListener("resize",fitAside); fitAside();
+/* the pull-tab stays fixed on screen, level with where the horse bar sits at the top of the page */
+function placeTab(){
+  const w=$(".ftab-wrap"), hb=$(".horsebar");
+  w.style.top=(hb.getBoundingClientRect().top+scrollY)+"px";
+  const ft=$("#toggleFilters"), hp=$("#horsePick").getBoundingClientRect(), db=$(".distbox").getBoundingClientRect();
+  ft.style.height=(db.top>hp.bottom)?Math.round(db.bottom-hp.top)+"px":"";
+  if(innerWidth<=980){ w.style.left=document.body.classList.contains("fopen")?($("#side").getBoundingClientRect().right-1)+"px":"0px"; }
+  else w.style.left=($("main").getBoundingClientRect().left+34)+"px";
+}
+function followTab(ms){ const end=performance.now()+ms; (function f(){ placeTab(); if(performance.now()<end) requestAnimationFrame(f); })(); }
+addEventListener("resize",placeTab);
+function setF(open){ document.body.classList.toggle("fopen",open); LS.set("rp_fopen",open); fitAside(); followTab(300); }
+$("#toggleFilters").onclick=()=>setF(!document.body.classList.contains("fopen"));
+$("#scrim").onclick=()=>setF(false);
+if(LS.get("rp_fopen",false)) document.body.classList.add("fopen");
+
+/* ---------- export / copy ---------- */
+function selRaces(){ return RACES.filter(r=>selected.has(r.id)).sort(SORTS.date); }
+function asText(rs){
+  const h=hName()?hName()+" — ":"";
+  return h+"Race options ("+rs.length+")\n\n"+rs.map(r=>`${fmtD(r.date)} · ${r.venue} (${r.state}, ${r.type})\n  ${r.name} — ${r.dist}m · ${r.cls}${r.grp?" · "+r.grp:""} · ${r.prizeS||"$0"}${r.bonus?" · "+r.bonus:""}\n  Noms: ${fmtDT(r.noms)}${r.late?" (late "+fmtDT(r.late)+")":""} · Acc: ${fmtDT(r.acc)}`).join("\n\n");
+}
+function asCSV(rs){
+  const cols=["Date","Venue","State","Type","Race Name","Distance","Class","Group","Age","Sex","Weight Group","Prize Money","Bonus Scheme","Nominations","Late Nominations","Acceptances"];
+  const q=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const T={"Nominations":r=>fmtDT(r.noms),"Late Nominations":r=>r.late?fmtDT(r.late):"","Acceptances":r=>fmtDT(r.acc)};
+  return [cols.join(",")].concat(rs.map(r=>cols.map(c=>q(T[c]?T[c](r):r.raw[c])).join(","))).join("\n");
+}
+function openModal(title,text,hint){ $("#mTitle").textContent=title; $("#mText").value=text; $("#mHint").textContent=hint||""; $("#modal").classList.add("on"); }
+$("#mClose").onclick=()=>$("#modal").classList.remove("on");
+$("#modal").onclick=e=>{ if(e.target.id==="modal") $("#modal").classList.remove("on"); };
+$("#mCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText($("#mText").value); toast("Copied"); }catch(e){ $("#mText").select(); toast("Press Cmd/Ctrl+C to copy"); } };
+$("#copySel").onclick=()=>openModal("Selected races — ready to paste into an email or message",asText(selRaces()));
+$("#exportSel").onclick=async()=>{
+  const rs=selRaces(), csv=asCSV(rs);
+  const nm=(hName()?hName().replace(/[^\w ]/g,"").trim()+" - ":"")+"race options.csv";
+  try{
+    const url=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));
+    const a=document.createElement("a"); a.href=url; a.download=nm; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+  }catch(e){ openModal("Selected races (CSV)",csv,"Copy and paste into Excel"); }
+};
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("on"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),1800); }
+
+/* ---------- CSV upload ---------- */
+$("#csvIn").addEventListener("click",()=>closeMenu());
+$("#csvIn").onchange=e=>{
+  const file=e.target.files[0]; if(!file) return;
+  if(!window.Papa){ toast("CSV reader didn't load — refresh and try again"); return; }
+  Papa.parse(file,{header:true,skipEmptyLines:true,complete:res=>{
+    const rows=res.data.filter(r=>r["Race Name"]&&r["Date"]);
+    if(!rows.length){ toast("That file doesn't look like a race calendar CSV"); return; }
+    RACES=normalise(rows); SRC=file.name+" (this visit only — refresh to go back to the shared calendar)";
+    selected=new Set([...selected].filter(id=>RACES.some(r=>r.id===id))); saveSel();
+    srcInfo(); defaults(); applyHorse(currentHorseId); render(true); toast(`Loaded ${RACES.length} races`);
+  }});
+  e.target.value="";
+};
+function srcInfo(){
+  const ds=RACES.map(r=>r.date); const mn=new Date(Math.min(...ds)), mx=new Date(Math.max(...ds));
+  $("#srcInfo").innerHTML=`<span>${RACES.length.toLocaleString()} races</span><span class="sep"> · </span><span>${mn.toLocaleDateString("en-AU",{day:"numeric",month:"short"})} – ${mx.toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"})}</span>`;
+  $("#srcInfo").title="Source: "+SRC;
+}
+
+/* ---------- horses: stable list (built from 25 Horse List.xlsx); edits are temporary ---------- */
+const UNNAMED=/^x\s?[A-Z]/;
+function sexOf(v,age){
+  const s=String(v||"").trim().toLowerCase();
+  const m={colt:"Colt",horse:"Horse",gelding:"Gelding",filly:"Filly",mare:"Mare",c:age<=3?"Colt":"Horse",h:"Horse",g:"Gelding",f:age<=3?"Filly":"Mare",m:"Mare"};
+  return m[s]||"";
+}
+const LIST={horses:horseRows.map(r=>{
+  const g=k=>String(r[k]==null?"":r[k]).trim();
+  const name=g("Name").replace(/\s+/g," "), age=parseInt(g("Age")), rt=parseInt(g("Rating"));
+  return {name, age, sex:sexOf(g("Sex"),age), rating:isNaN(rt)?null:rt, maiden:isNaN(rt), flag:"", id_code:"",
+    inwork:/^(y|yes|true|1|in work)$/i.test(g("In Work")), loc:""};
+}).filter(h=>h.name&&!UNNAMED.test(h.name)&&h.age>=2&&h.sex)};
+function slug(s){ return (s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"horse").slice(0,60); }
+const BASE={};
+LIST.horses.forEach(h=>{
+  const r=h.rating;
+  BASE[slug(h.name)]={
+    name:h.name, age:String(Math.min(h.age,8)), sex:h.sex, rating:r==null?"":String(r), wins:h.maiden?"0":"",
+    notes:(h.maiden?"Maiden":"")+(h.flag?(h.maiden?" · ":"")+h.flag:""),
+    distMin:"",distMax:"", bmMin:r==null?"":String(Math.max(0,r-4)), bmMax:r==null?"":String(r+6),
+    kinds:h.maiden?["maiden"]:["class","bm","open"].concat(r>=85?["group"]:[]),
+    fromList:true, idCode:h.id_code, inWork:!!h.inwork, loc:h.loc||""
+  };
+});
+function hName(){ return $("#hName").value.trim(); }
+function rebuild(){ horses={}; Object.keys(BASE).forEach(id=>horses[id]={...BASE[id]}); }
+function applyHorse(id){
+  currentHorseId=id||""; const h=horses[currentHorseId];
+  $("#horsePick").value=currentHorseId; pickTone();
+  if(!h){ ["#hName","#hRating","#hWins"].forEach(s=>$(s).value=""); $("#hAge").value=""; $("#hSex").value=""; return; }
+  $("#hName").value=h.name||""; $("#hAge").value=h.age||""; $("#hSex").value=h.sex||""; $("#hRating").value=h.rating||""; $("#hWins").value=h.wins??"";
+  $("#distMin").value=h.distMin||""; $("#distMax").value=h.distMax||""; $("#bmMin").value=h.bmMin||""; $("#bmMax").value=h.bmMax||"";
+  if(Array.isArray(h.states)) setChips("#states",h.states);
+  if(Array.isArray(h.types)) setChips("#types",h.types);
+  if(Array.isArray(h.kinds)) $$("#kinds input").forEach(i=>i.checked=h.kinds.includes(i.value));
+}
+function label(h){ const n=(h.name.replace(/\s*\([^)]*\)\s*$/,"").trim())||h.name; return n; }
+function fillPick(){
+  const ids=Object.keys(horses).sort((a,b)=>label(horses[a]).localeCompare(label(horses[b]),"en",{sensitivity:"base"}));
+  const groups=[["In work",h=>h.inWork],["Out of work",h=>!h.inWork]];
+  $("#horsePick").innerHTML=`<option value="" disabled hidden>Horse</option>`+groups.map(([g,f])=>{
+    const m=ids.filter(id=>f(horses[id])); if(!m.length) return "";
+    return `<optgroup label="${g}">`+m.map(id=>`<option value="${esc(id)}">${esc(label(horses[id]))}</option>`).join("")+"</optgroup>";
+  }).join("");
+  $("#horsePick").value=horses[currentHorseId]?currentHorseId:"";
+  pickTone();
+}
+function pickTone(){ const el=$("#horsePick"); el.classList.toggle("ph",!el.value); }
+$("#horsePick").onchange=e=>{ pickTone(); applyHorse(e.target.value); viewSelOnly=false; render(true); };
+$("#hName").addEventListener("input",()=>{ // typing a different name = a one-off horse, so drop the list selection
+  if(currentHorseId&&horses[currentHorseId]&&hName()!==horses[currentHorseId].name){ currentHorseId=""; $("#horsePick").value=""; pickTone(); }
+});
+/* ---------- boot ---------- */
+rebuild();
+srcInfo(); fillPick(); resetAll(); render(true); placeTab(); // first open = same as Reset
+
+})();
+</script>
+</body>
+</html>
