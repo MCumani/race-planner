@@ -548,7 +548,9 @@ function passes(r,f,now){
   const bucket=k.k==="rtgmin"||k.k==="rtgmax"?"bm":k.k;
   // maidens also see age-restricted races open to any class (e.g. 2YO handicaps, Blue Diamond preludes)
   const ageOnly=f.kinds.includes("maiden")&&f.wins===0&&r.ageR&&r.ageR.set&&(bucket==="open"||bucket==="group");
-  if(!f.kinds.includes(bucket)&&!ageOnly) return false;
+  // 2 and 3 year olds always see Group & Listed races restricted to 2YO and/or 3YO (age already checked above)
+  const youngBlack=(f.age===2||f.age===3)&&bucket==="group"&&r.ageR&&r.ageR.set&&r.ageR.set.every(x=>x<=3);
+  if(!f.kinds.includes(bucket)&&!ageOnly&&!youngBlack) return false;
   if(k.k==="maiden"&&f.wins!=null&&f.wins>0) return false;
   if(k.k==="class"&&f.wins!=null&&f.wins>k.n) return false;
   if(k.k==="bm"){ if(f.bmMin!=null&&k.n<f.bmMin) return false; if(f.bmMax!=null&&k.n>f.bmMax) return false; }
