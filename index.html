@@ -298,7 +298,7 @@ main{padding:14px 20px 60px 34px;min-width:0;container-type:inline-size;containe
       <label><input type="checkbox" value="group"> Group &amp; Listed</label>
     </div>
     <div class="row" style="margin-top:10px"><label class="l">BM range</label><input type="number" id="bmMin" placeholder="from"><span class="to">to</span><input type="number" id="bmMax" placeholder="to"></div>
-    <div class="hint">Set from the rating (−4 to +6).</div>
+    <div class="hint">Set from the rating (−5 to +15).</div>
   </div>
 
   <div class="sec">
@@ -690,7 +690,7 @@ $("#sortBy").onchange=()=>render(true);
 let qT; $("#q").oninput=()=>{clearTimeout(qT);qT=setTimeout(()=>render(true),200)};
 ["#dFrom","#dTo","#distMin","#distMax","#bmMin","#bmMax","#hAge","#hSex","#hWins","#hName"].forEach(s=>$(s).addEventListener("input",()=>render(true)));
 $$("#kinds input").forEach(i=>i.addEventListener("change",()=>render(true)));
-$("#hRating").addEventListener("input",()=>{ const v=$("#hRating").value; if(v!==""){ $("#bmMin").value=Math.max(0,+v-4); $("#bmMax").value=+v+6; } render(true); });
+$("#hRating").addEventListener("input",()=>{ const v=$("#hRating").value; if(v!==""){ $("#bmMin").value=Math.max(0,+v-5); $("#bmMax").value=+v+15; } render(true); });
 $$(".sec .chip[data-days]").forEach(c=>c.onclick=()=>{
   const d=c.dataset.days;
   if(d==="all") allDates();
@@ -898,7 +898,7 @@ LIST.horses.forEach(h=>{
   BASE[slug(h.name)]={
     name:h.name, age:String(Math.min(h.age,8)), sex:h.sex, rating:r==null?"":String(r), wins:h.maiden?"0":"",
     notes:(h.maiden?"Maiden":"")+(h.flag?(h.maiden?" · ":"")+h.flag:""),
-    distMin:"",distMax:"", bmMin:r==null?"":String(Math.max(0,r-4)), bmMax:r==null?"":String(r+6),
+    distMin:"",distMax:"", bmMin:r==null?"":String(Math.max(0,r-5)), bmMax:r==null?"":String(r+15),
     kinds:h.maiden?["maiden"]:["class","bm","open"].concat(r>=85?["group"]:[]),
     fromList:true, idCode:h.id_code, inWork:!!h.inwork, loc:h.loc||"", breeding:h.breeding||""
   };
