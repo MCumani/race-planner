@@ -10,6 +10,7 @@ Rules
   Racing age = season year (rolls over 1 August) minus birth year.
 - Rating: a number in BM; blank, "-" or text (e.g. "BD") = maiden.
 - In Work: Loc. is a number 1-42.
+- A horse listed twice is kept once, keeping its rating.
 """
 import csv, re, sys, datetime
 today = datetime.date.today()
@@ -33,6 +34,11 @@ for line in open(sys.argv[1], encoding='utf-8-sig'):
            'f': 'Filly' if age <= 3 else 'Mare', 'm': 'Mare'}[sx]
     rating = bm if re.fullmatch(r'\d{1,3}', bm) else ''
     inwork = 'Yes' if re.fullmatch(r'\d+', loc) and 1 <= int(loc) <= 42 else 'No'
+    prev = next((o for o in out if o[0] == nm), None)
+    if prev:  # same horse listed twice: keep the rated / in-work details
+        if not prev[3] and rating: prev[3] = rating
+        if inwork == 'Yes': prev[4] = 'Yes'
+        continue
     out.append([nm, age, sex, rating, inwork, ped])
 with open('data/horses.csv', 'w', newline='') as f:
     w = csv.writer(f); w.writerow(['Name', 'Age', 'Sex', 'Rating', 'In Work', 'Breeding']); w.writerows(out)
